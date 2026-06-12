@@ -68,6 +68,7 @@ extern cvar_t *r_lefthand;
 extern cvar_t *cl_paused;
 
 cvar_t *vr_snapturn_angle;
+cvar_t *vr_smoothturn;
 cvar_t *vr_walkdirection;
 cvar_t *vr_weapon_pitchadjust;
 cvar_t *vr_lasersight;
@@ -510,61 +511,60 @@ static void q2xr_CreateAction(XrActionType type, const char *name, const char *l
     Q2XR_CHECK_XR(xrCreateAction(actionSet, &aci, action));
 }
 
+static XrActionSuggestedBinding q2xr_BindingFromString(XrAction action, const char *bindingString)
+{
+    XrPath bindingPath = XR_NULL_PATH;
+    q2xr_Path(bindingString, &bindingPath);
+    return q2xr_Binding(action, bindingPath);
+}
+
 static void q2xr_SuggestTouchBindings(void)
 {
-    XrPath profile;
-    q2xr_Path("/interaction_profiles/oculus/touch_controller", &profile);
+    XrPath profile = XR_NULL_PATH;
 
-    XrPath leftGripPose, rightGripPose, leftAimPose, rightAimPose;
-    XrPath leftHaptic, rightHaptic, leftMenu;
-    XrPath leftSqueeze, rightSqueeze, leftTrigger, rightTrigger;
-    XrPath leftStick, rightStick, leftStickClick, rightStickClick, leftStickTouch, rightStickTouch;
-    XrPath leftX, leftY, rightA, rightB;
-    q2xr_Path("/user/hand/left/input/grip/pose", &leftGripPose);
-    q2xr_Path("/user/hand/right/input/grip/pose", &rightGripPose);
-    q2xr_Path("/user/hand/left/input/aim/pose", &leftAimPose);
-    q2xr_Path("/user/hand/right/input/aim/pose", &rightAimPose);
-    q2xr_Path("/user/hand/left/output/haptic", &leftHaptic);
-    q2xr_Path("/user/hand/right/output/haptic", &rightHaptic);
-    q2xr_Path("/user/hand/left/input/menu/click", &leftMenu);
-    q2xr_Path("/user/hand/left/input/squeeze/value", &leftSqueeze);
-    q2xr_Path("/user/hand/right/input/squeeze/value", &rightSqueeze);
-    q2xr_Path("/user/hand/left/input/trigger/value", &leftTrigger);
-    q2xr_Path("/user/hand/right/input/trigger/value", &rightTrigger);
-    q2xr_Path("/user/hand/left/input/thumbstick", &leftStick);
-    q2xr_Path("/user/hand/right/input/thumbstick", &rightStick);
-    q2xr_Path("/user/hand/left/input/thumbstick/click", &leftStickClick);
-    q2xr_Path("/user/hand/right/input/thumbstick/click", &rightStickClick);
-    q2xr_Path("/user/hand/left/input/thumbstick/touch", &leftStickTouch);
-    q2xr_Path("/user/hand/right/input/thumbstick/touch", &rightStickTouch);
-    q2xr_Path("/user/hand/left/input/x/click", &leftX);
-    q2xr_Path("/user/hand/left/input/y/click", &leftY);
-    q2xr_Path("/user/hand/right/input/a/click", &rightA);
-    q2xr_Path("/user/hand/right/input/b/click", &rightB);
+    if (hmdType == XR_DEVICE_TYPE_PICO) {
+        q2xr_Path("/interaction_profiles/pico/neo3_controller", &profile);
+    } else {
+        q2xr_Path("/interaction_profiles/oculus/touch_controller", &profile);
+    }
 
     XrActionSuggestedBinding bindings[32];
     uint32_t n = 0;
-    bindings[n++] = q2xr_Binding(gripPoseAction, leftGripPose);
-    bindings[n++] = q2xr_Binding(gripPoseAction, rightGripPose);
-    bindings[n++] = q2xr_Binding(aimPoseAction, leftAimPose);
-    bindings[n++] = q2xr_Binding(aimPoseAction, rightAimPose);
-    bindings[n++] = q2xr_Binding(hapticAction, leftHaptic);
-    bindings[n++] = q2xr_Binding(hapticAction, rightHaptic);
-    bindings[n++] = q2xr_Binding(menuAction, leftMenu);
-    bindings[n++] = q2xr_Binding(squeezeAction, leftSqueeze);
-    bindings[n++] = q2xr_Binding(squeezeAction, rightSqueeze);
-    bindings[n++] = q2xr_Binding(triggerAction, leftTrigger);
-    bindings[n++] = q2xr_Binding(triggerAction, rightTrigger);
-    bindings[n++] = q2xr_Binding(thumbstickAction, leftStick);
-    bindings[n++] = q2xr_Binding(thumbstickAction, rightStick);
-    bindings[n++] = q2xr_Binding(thumbstickClickAction, leftStickClick);
-    bindings[n++] = q2xr_Binding(thumbstickClickAction, rightStickClick);
-    bindings[n++] = q2xr_Binding(thumbstickTouchAction, leftStickTouch);
-    bindings[n++] = q2xr_Binding(thumbstickTouchAction, rightStickTouch);
-    bindings[n++] = q2xr_Binding(xAction, leftX);
-    bindings[n++] = q2xr_Binding(yAction, leftY);
-    bindings[n++] = q2xr_Binding(aAction, rightA);
-    bindings[n++] = q2xr_Binding(bAction, rightB);
+
+    bindings[n++] = q2xr_BindingFromString(gripPoseAction, "/user/hand/left/input/aim/pose");
+    bindings[n++] = q2xr_BindingFromString(gripPoseAction, "/user/hand/right/input/aim/pose");
+    bindings[n++] = q2xr_BindingFromString(aimPoseAction, "/user/hand/left/input/aim/pose");
+    bindings[n++] = q2xr_BindingFromString(aimPoseAction, "/user/hand/right/input/aim/pose");
+    bindings[n++] = q2xr_BindingFromString(hapticAction, "/user/hand/left/output/haptic");
+    bindings[n++] = q2xr_BindingFromString(hapticAction, "/user/hand/right/output/haptic");
+
+    if (hmdType == XR_DEVICE_TYPE_PICO) {
+        bindings[n++] = q2xr_BindingFromString(menuAction, "/user/hand/left/input/back/click");
+        bindings[n++] = q2xr_BindingFromString(menuAction, "/user/hand/right/input/back/click");
+        bindings[n++] = q2xr_BindingFromString(triggerAction, "/user/hand/left/input/trigger/click");
+        bindings[n++] = q2xr_BindingFromString(triggerAction, "/user/hand/right/input/trigger/click");
+    } else {
+        bindings[n++] = q2xr_BindingFromString(menuAction, "/user/hand/left/input/menu/click");
+        bindings[n++] = q2xr_BindingFromString(triggerAction, "/user/hand/left/input/trigger");
+        bindings[n++] = q2xr_BindingFromString(triggerAction, "/user/hand/right/input/trigger");
+    }
+
+    bindings[n++] = q2xr_BindingFromString(squeezeAction, "/user/hand/left/input/squeeze/value");
+    bindings[n++] = q2xr_BindingFromString(squeezeAction, "/user/hand/right/input/squeeze/value");
+    bindings[n++] = q2xr_BindingFromString(thumbstickAction, "/user/hand/left/input/thumbstick");
+    bindings[n++] = q2xr_BindingFromString(thumbstickAction, "/user/hand/right/input/thumbstick");
+    bindings[n++] = q2xr_BindingFromString(thumbstickClickAction, "/user/hand/left/input/thumbstick/click");
+    bindings[n++] = q2xr_BindingFromString(thumbstickClickAction, "/user/hand/right/input/thumbstick/click");
+
+    if (hmdType != XR_DEVICE_TYPE_PICO) {
+        bindings[n++] = q2xr_BindingFromString(thumbstickTouchAction, "/user/hand/left/input/thumbstick/touch");
+        bindings[n++] = q2xr_BindingFromString(thumbstickTouchAction, "/user/hand/right/input/thumbstick/touch");
+    }
+
+    bindings[n++] = q2xr_BindingFromString(xAction, "/user/hand/left/input/x/click");
+    bindings[n++] = q2xr_BindingFromString(yAction, "/user/hand/left/input/y/click");
+    bindings[n++] = q2xr_BindingFromString(aAction, "/user/hand/right/input/a/click");
+    bindings[n++] = q2xr_BindingFromString(bAction, "/user/hand/right/input/b/click");
 
     XrInteractionProfileSuggestedBinding suggested;
     memset(&suggested, 0, sizeof(suggested));
@@ -574,7 +574,6 @@ static void q2xr_SuggestTouchBindings(void)
     suggested.suggestedBindings = bindings;
     Q2XR_CHECK_XR(xrSuggestInteractionProfileBindings(gApp.Instance, &suggested));
 }
-
 static bool q2xr_CreateActions(void)
 {
     q2xr_Path("/user/hand/left", &handPath[0]);
@@ -590,7 +589,7 @@ static bool q2xr_CreateActions(void)
     q2xr_CreateAction(XR_ACTION_TYPE_POSE_INPUT, "grip_pose", "Grip Pose", &gripPoseAction);
     q2xr_CreateAction(XR_ACTION_TYPE_POSE_INPUT, "aim_pose", "Aim Pose", &aimPoseAction);
     q2xr_CreateAction(XR_ACTION_TYPE_VIBRATION_OUTPUT, "haptic", "Haptic", &hapticAction);
-    q2xr_CreateAction(XR_ACTION_TYPE_FLOAT_INPUT, "trigger", "Trigger", &triggerAction);
+    q2xr_CreateAction(XR_ACTION_TYPE_BOOLEAN_INPUT, "trigger", "Trigger", &triggerAction);
     q2xr_CreateAction(XR_ACTION_TYPE_FLOAT_INPUT, "squeeze", "Squeeze", &squeezeAction);
     q2xr_CreateAction(XR_ACTION_TYPE_VECTOR2F_INPUT, "thumbstick", "Thumbstick", &thumbstickAction);
     q2xr_CreateAction(XR_ACTION_TYPE_BOOLEAN_INPUT, "thumbstick_click", "Thumbstick Click", &thumbstickClickAction);
@@ -679,15 +678,25 @@ void TBXR_UpdateControllers(void)
 
     for (int hand = 0; hand < NUM_EYES; ++hand) {
         memset(states[hand], 0, sizeof(*states[hand]));
-        XrActionStateFloat trigger = q2xr_GetFloat(triggerAction, hand);
+        XrActionStateBoolean trigger = q2xr_GetBoolean(triggerAction, hand);
         XrActionStateFloat squeeze = q2xr_GetFloat(squeezeAction, hand);
         XrActionStateVector2f stick = q2xr_GetVector2(thumbstickAction, hand);
-        states[hand]->IndexTrigger = trigger.currentState;
+        states[hand]->IndexTrigger = trigger.currentState ? 1.0f : 0.0f;
         states[hand]->GripTrigger = squeeze.currentState;
-        states[hand]->Joystick.x = stick.currentState.x;
-        states[hand]->Joystick.y = stick.currentState.y;
+        float joyX = stick.currentState.x;
+        float joyY = stick.currentState.y;
 
-        if (trigger.currentState > 0.5f) states[hand]->Buttons |= ovrButton_Trigger;
+        float joyLen = sqrtf((joyX * joyX) + (joyY * joyY));
+
+        if (joyLen > 1.0f) {
+            joyX /= joyLen;
+            joyY /= joyLen;
+        }
+
+        states[hand]->Joystick.x = joyX;
+        states[hand]->Joystick.y = joyY;
+
+        if (trigger.currentState) states[hand]->Buttons |= ovrButton_Trigger;
         if (squeeze.currentState > 0.5f) states[hand]->Buttons |= ovrButton_GripTrigger;
         if (q2xr_GetBoolean(thumbstickClickAction, hand).currentState) states[hand]->Buttons |= ovrButton_Joystick | (hand == 0 ? ovrButton_LThumb : ovrButton_RThumb);
         if (q2xr_GetBoolean(thumbstickTouchAction, hand).currentState) states[hand]->Touches |= ovrTouch_ThumbRest;
@@ -757,11 +766,16 @@ static void q2xr_ProcessHaptics(float frameTimeMs)
     }
 }
 
+#ifndef XR_PICO_CONTROLLER_INTERACTION_EXTENSION_NAME
+#define XR_PICO_CONTROLLER_INTERACTION_EXTENSION_NAME "XR_BD_controller_interaction"
+#endif
+
 static bool q2xr_InitOpenXR(q2xrAppThread *thread)
 {
     const char *extensions[] = {
         XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME,
-        XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME
+        XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME,
+        XR_PICO_CONTROLLER_INTERACTION_EXTENSION_NAME
     };
 
     PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR = NULL;
@@ -1265,18 +1279,19 @@ void VR_Init()
     srand(time(NULL));
 
     vr_snapturn_angle = Cvar_Get("vr_snapturn_angle", "45", CVAR_ARCHIVE);
+    vr_smoothturn = Cvar_Get("vr_smoothturn", "0", CVAR_ARCHIVE);
     vr_walkdirection = Cvar_Get("vr_walkdirection", "0", CVAR_ARCHIVE);
     vr_weapon_pitchadjust = Cvar_Get("vr_weapon_pitchadjust", "-20.0", CVAR_ARCHIVE);
     vr_control_scheme = Cvar_Get("vr_control_scheme", "0", CVAR_ARCHIVE);
     vr_height_adjust = Cvar_Get("vr_height_adjust", "0.0", CVAR_ARCHIVE);
     vr_weaponscale = Cvar_Get("vr_weaponscale", "0.56", CVAR_ARCHIVE);
     vr_weapon_stabilised = Cvar_Get("vr_weapon_stabilised", "0.0", CVAR_LATCH);
-    vr_lasersight = Cvar_Get("vr_lasersight", "0", CVAR_LATCH);
     vr_comfort_mask = Cvar_Get("vr_comfort_mask", "0.0", CVAR_ARCHIVE);
     vr_turn_deadzone = Cvar_Get("vr_turn_deadzone", "0.2", CVAR_ARCHIVE);
     vr_framerate = Cvar_Get("vr_framerate", "0", CVAR_ARCHIVE);
     vr_use_wheels = Cvar_Get("vr_use_wheels", "0", CVAR_ARCHIVE);
     vr_worldscale = Cvar_Get("vr_worldscale", "26.2467", CVAR_ARCHIVE);
+	vr_lasersight = Cvar_Get("vr_lasersight", "0", CVAR_ARCHIVE);
     Cvar_Get("vr_hud_depth", "0.5", CVAR_ARCHIVE);
     Cvar_Get("vr_hud_ipd", "0.064", CVAR_ARCHIVE);
     Cvar_Get("vr_screen_depth", "3.5", CVAR_ARCHIVE);
