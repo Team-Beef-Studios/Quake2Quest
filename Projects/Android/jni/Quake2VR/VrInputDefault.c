@@ -471,11 +471,6 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 (pOffTrackedRemoteOld->Buttons & ovrButton_Joystick)
                 && (pOffTrackedRemoteNew->Buttons & ovrButton_Joystick)) {
 
-                //If cheats enabled, give all weapons/pickups to player
-                if (sv_cheats->value == 1.0f) {
-                    Cbuf_AddText("give all\n");
-                }
-
             }
 
             //We need to record if we have started firing primary so that releasing trigger will stop definitely firing, if user has pushed grip
