@@ -1810,88 +1810,132 @@ RI_SetPalette(const unsigned char *palette)
 void R_DrawLaserSight( entity_t *e )
 {
 #define NUM_LASER_SIGHT_SEGS 8
+    if (vr_lasersight->value == 1.0) {
 
-	int	i;
-	float r, g, b;
+        int	i;
+        float r, g, b;
 
-	vec3_t perpvec;
-	vec3_t direction, normalized_direction;
-	vec3_t start_points[NUM_LASER_SIGHT_SEGS], end_points[NUM_LASER_SIGHT_SEGS];
-	vec3_t oldorigin, origin;
+        vec3_t perpvec;
+        vec3_t direction, normalized_direction;
+        vec3_t start_points[NUM_LASER_SIGHT_SEGS], end_points[NUM_LASER_SIGHT_SEGS];
+        vec3_t oldorigin, origin;
 
-	GLfloat vtx[3*NUM_LASER_SIGHT_SEGS*4];
-	unsigned int index_vtx = 0;
-	unsigned int pointb;
+        GLfloat vtx[3*NUM_LASER_SIGHT_SEGS*4];
+        unsigned int index_vtx = 0;
+        unsigned int pointb;
 
-	oldorigin[0] = e->oldorigin[0];
-	oldorigin[1] = e->oldorigin[1];
-	oldorigin[2] = e->oldorigin[2];
+        oldorigin[0] = e->oldorigin[0];
+        oldorigin[1] = e->oldorigin[1];
+        oldorigin[2] = e->oldorigin[2];
 
-	origin[0] = e->origin[0];
-	origin[1] = e->origin[1];
-	origin[2] = e->origin[2];
+        origin[0] = e->origin[0];
+        origin[1] = e->origin[1];
+        origin[2] = e->origin[2];
 
-	normalized_direction[0] = direction[0] = oldorigin[0] - origin[0];
-	normalized_direction[1] = direction[1] = oldorigin[1] - origin[1];
-	normalized_direction[2] = direction[2] = oldorigin[2] - origin[2];
+        normalized_direction[0] = direction[0] = oldorigin[0] - origin[0];
+        normalized_direction[1] = direction[1] = oldorigin[1] - origin[1];
+        normalized_direction[2] = direction[2] = oldorigin[2] - origin[2];
 
-	if ( VectorNormalize( normalized_direction ) == 0 )
-		return;
+        if ( VectorNormalize( normalized_direction ) == 0 )
+            return;
 
-	PerpendicularVector( perpvec, normalized_direction );
-	VectorScale( perpvec, 0.1, perpvec );
+        PerpendicularVector( perpvec, normalized_direction );
+        VectorScale( perpvec, 0.1, perpvec );
 
-	for ( i = 0; i < NUM_LASER_SIGHT_SEGS; i++ )
-	{
-		RotatePointAroundVector( start_points[i], normalized_direction, perpvec, (360.0/NUM_LASER_SIGHT_SEGS)*i );
-		VectorAdd( start_points[i], origin, start_points[i] );
-		VectorAdd( start_points[i], direction, end_points[i] );
-	}
+        for ( i = 0; i < NUM_LASER_SIGHT_SEGS; i++ )
+        {
+            RotatePointAroundVector( start_points[i], normalized_direction, perpvec, (360.0/NUM_LASER_SIGHT_SEGS)*i );
+            VectorAdd( start_points[i], origin, start_points[i] );
+            VectorAdd( start_points[i], direction, end_points[i] );
+        }
 
-	glDisable( GL_TEXTURE_2D );
-	glEnable( GL_BLEND );
-	glDepthMask( GL_FALSE );
+        glDisable( GL_TEXTURE_2D );
+        glEnable( GL_BLEND );
+        glDepthMask( GL_FALSE );
 
-	if (e->frame == 6 || e->frame == 7)
-	{
-		//grenade "pointer"
-		glColor4f( 0, 0, 1, 1.0 );
-	} else {
-		glColor4f( 1, 0, 0, 1.0 );
-	}
-
+        if (e->frame == 6 || e->frame == 7)
+        {
+            glColor4f( 0, 0, 1, 1.0 );
+        } else {
+            glColor4f( 1, 0, 0, 1.0 );
+        }
 
 
-	for ( i = 0; i < NUM_LASER_SIGHT_SEGS; i++ )
-	{
-		vtx[index_vtx++] = start_points [ i ][ 0 ];
-		vtx[index_vtx++] = start_points [ i ][ 1 ];
-		vtx[index_vtx++] = start_points [ i ][ 2 ];
 
-		vtx[index_vtx++] = end_points [ i ][ 0 ];
-		vtx[index_vtx++] = end_points [ i ][ 1 ];
-		vtx[index_vtx++] = end_points [ i ][ 2 ];
+        for ( i = 0; i < NUM_LASER_SIGHT_SEGS; i++ )
+        {
+            vtx[index_vtx++] = start_points [ i ][ 0 ];
+            vtx[index_vtx++] = start_points [ i ][ 1 ];
+            vtx[index_vtx++] = start_points [ i ][ 2 ];
 
-		pointb = ( i + 1 ) % NUM_LASER_SIGHT_SEGS;
-		vtx[index_vtx++] = start_points [ pointb ][ 0 ];
-		vtx[index_vtx++] = start_points [ pointb ][ 1 ];
-		vtx[index_vtx++] = start_points [ pointb ][ 2 ];
+            vtx[index_vtx++] = end_points [ i ][ 0 ];
+            vtx[index_vtx++] = end_points [ i ][ 1 ];
+            vtx[index_vtx++] = end_points [ i ][ 2 ];
 
-		vtx[index_vtx++] = end_points [ pointb ][ 0 ];
-		vtx[index_vtx++] = end_points [ pointb ][ 1 ];
-		vtx[index_vtx++] = end_points [ pointb ][ 2 ];
-	}
+            pointb = ( i + 1 ) % NUM_LASER_SIGHT_SEGS;
+            vtx[index_vtx++] = start_points [ pointb ][ 0 ];
+            vtx[index_vtx++] = start_points [ pointb ][ 1 ];
+            vtx[index_vtx++] = start_points [ pointb ][ 2 ];
 
-	glEnableClientState( GL_VERTEX_ARRAY );
+            vtx[index_vtx++] = end_points [ pointb ][ 0 ];
+            vtx[index_vtx++] = end_points [ pointb ][ 1 ];
+            vtx[index_vtx++] = end_points [ pointb ][ 2 ];
+        }
 
-	glVertexPointer( 3, GL_FLOAT, 0, vtx );
-	glDrawArrays( GL_TRIANGLE_STRIP, 0, NUM_LASER_SIGHT_SEGS*4 );
+        glEnableClientState( GL_VERTEX_ARRAY );
 
-	glDisableClientState( GL_VERTEX_ARRAY );
+        glVertexPointer( 3, GL_FLOAT, 0, vtx );
+        glDrawArrays( GL_TRIANGLE_STRIP, 0, NUM_LASER_SIGHT_SEGS*4 );
 
-	glEnable( GL_TEXTURE_2D );
-	glDisable( GL_BLEND );
-	glDepthMask( GL_TRUE );
+        glDisableClientState( GL_VERTEX_ARRAY );
+
+        glEnable( GL_TEXTURE_2D );
+        glDisable( GL_BLEND );
+        glDepthMask( GL_TRUE );
+    }
+    if (vr_lasersight->value == 2.0) {
+
+        vec3_t point;
+        VectorCopy(e->origin, point);
+
+        glDisable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
+        glDepthMask(GL_FALSE);
+        glDisable(GL_DEPTH_TEST);
+
+        if (e->frame == 6 || e->frame == 7) {
+            glColor4f(0, 0, 1, 1.0);
+        } else {
+            glColor4f(1, 0, 0, 1.0);
+        }
+
+#define NUM_DOT_SEGS 16
+#define DOT_RADIUS 1.0f
+
+        GLfloat vtx[3 * (NUM_DOT_SEGS + 2)];
+        unsigned int index_vtx = 0;
+
+        vtx[index_vtx++] = point[0];
+        vtx[index_vtx++] = point[1];
+        vtx[index_vtx++] = point[2];
+
+        for (int i = 0; i <= NUM_DOT_SEGS; i++) {
+            float angle = (2.0f * M_PI * i) / NUM_DOT_SEGS;
+            vtx[index_vtx++] = point[0] + DOT_RADIUS * vup[0] * cosf(angle) + DOT_RADIUS * vright[0] * sinf(angle);
+            vtx[index_vtx++] = point[1] + DOT_RADIUS * vup[1] * cosf(angle) + DOT_RADIUS * vright[1] * sinf(angle);
+            vtx[index_vtx++] = point[2] + DOT_RADIUS * vup[2] * cosf(angle) + DOT_RADIUS * vright[2] * sinf(angle);
+        }
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3, GL_FLOAT, 0, vtx);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, NUM_DOT_SEGS + 2);
+        glDisableClientState(GL_VERTEX_ARRAY);
+
+        glEnable(GL_TEXTURE_2D);
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 /* R_DrawBeam */

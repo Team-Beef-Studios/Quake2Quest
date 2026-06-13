@@ -116,6 +116,8 @@ struct model_s *cl_mod_heatbeam;
 struct model_s *cl_mod_monster_heatbeam;
 struct model_s *cl_mod_explo4_big;
 
+extern cvar_t *vr_lasersight;
+
 void
 CL_RegisterTEntSounds(void)
 {
@@ -560,8 +562,14 @@ void CL_UpdateLaserSightOrigins ()
         VectorMA(gunorigin, (float)(useTrajectoryIndicator ? 16.0 : 4096.0), forward, end);
 		trace_t tr = CL_Trace(gunorigin, end, 1,
 							  CONTENTS_SOLID | CONTENTS_MONSTER | CONTENTS_DEADMONSTER);
-		VectorCopy(gunorigin, cl_lasersight.ent.origin);
-		VectorCopy(tr.endpos, cl_lasersight.ent.oldorigin);
+        if (vr_lasersight->value == 1.0) {
+            VectorCopy(gunorigin, cl_lasersight.ent.origin);
+            VectorCopy(tr.endpos, cl_lasersight.ent.oldorigin);
+        }
+        if (vr_lasersight->value == 2.0) {
+            VectorCopy(tr.endpos, cl_lasersight.ent.origin);
+            VectorMA(tr.endpos, 0.1f, forward, cl_lasersight.ent.oldorigin);
+        }
 	}
 }
 

@@ -423,17 +423,25 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
 
         {
 			//Laser-sight
-			if ((pDominantTrackedRemoteNew->Buttons & ovrButton_Joystick) !=
-				(pDominantTrackedRemoteOld->Buttons & ovrButton_Joystick)
-				&& (pDominantTrackedRemoteNew->Buttons & ovrButton_Joystick)) {
+            if ((pDominantTrackedRemoteNew->Buttons & ovrButton_Joystick) !=
+                (pDominantTrackedRemoteOld->Buttons & ovrButton_Joystick)
+                && (pDominantTrackedRemoteNew->Buttons & ovrButton_Joystick))
+            {
+                float current = vr_lasersight->value;
 
-			    if (vr_lasersight->value != 0.0)
+                if (current == 0.0f)
+                {
+                    Cvar_ForceSet("vr_lasersight", "1.0");
+                }
+                else if (current == 1.0f)
+                {
+                    Cvar_ForceSet("vr_lasersight", "2.0");
+                }
+                else
                 {
                     Cvar_ForceSet("vr_lasersight", "0.0");
-                } else {
-                    Cvar_ForceSet("vr_lasersight", "1.0");
-			    }
-			}
+                }
+            }
 
 			//Apply a filter and quadratic scaler so small movements are easier to make
 			float dist = length(secondaryJoystickNew.x, secondaryJoystickNew.y);
