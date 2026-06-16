@@ -224,9 +224,9 @@ InitGame(void)
 	/* VR Stuff */
 	vr_worldscale = gi.cvar( "vr_worldscale", "26.2467", CVAR_ARCHIVE);
 	vr_height_adjust = gi.cvar( "vr_height_adjust", "0.0", CVAR_ARCHIVE);
-	vr_lasersight = gi.cvar("vr_lasersight", "0", CVAR_LATCH);
+	vr_lasersight = gi.cvar("vr_lasersight", "2", CVAR_LATCH);
 	vr_weapon_stabilised = gi.cvar( "vr_weapon_stabilised", "0.0", CVAR_LATCH);
-	vr_jump_sound = gi.cvar( "vr_jump_sound", "0", CVAR_ARCHIVE);
+	vr_jump_sound = gi.cvar( "vr_jump_sound", "1", CVAR_ARCHIVE);
 
 	/* noset vars */
 	dedicated = gi.cvar("dedicated", "0", CVAR_NOSET);

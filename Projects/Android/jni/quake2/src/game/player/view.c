@@ -1231,6 +1231,11 @@ ClientEndServerFrame(edict_t *ent)
 	VectorCopy(ent->velocity, ent->client->oldvelocity);
 	VectorCopy(ent->client->ps.viewangles, ent->client->oldviewangles);
 
+	/* Expose this frame's weapon recoil to the client via the player_state so the VR
+	 * laser sight can follow the exact same kick the bullets are fired along (the view
+	 * itself is deliberately not kicked in VR). Must happen before the kick is cleared. */
+	VectorCopy(ent->client->kick_angles, ent->client->ps.kick_angles);
+
 	/* clear weapon kicks */
 	VectorClear(ent->client->kick_origin);
 	VectorClear(ent->client->kick_angles);

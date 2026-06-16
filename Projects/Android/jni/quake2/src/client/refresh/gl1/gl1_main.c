@@ -1238,7 +1238,7 @@ void
 R_Register(void)
 {
 	gl_lefthand = ri.Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
-	vr_lasersight = ri.Cvar_Get("vr_lasersight", "0", CVAR_LATCH);
+	vr_lasersight = ri.Cvar_Get("vr_lasersight", "2", CVAR_LATCH);
 	vr_weaponscale = ri.Cvar_Get("vr_weaponscale", "0.56", CVAR_ARCHIVE);
 
 	r_farsee = ri.Cvar_Get("r_farsee", "0", CVAR_LATCH | CVAR_ARCHIVE);
@@ -1282,7 +1282,7 @@ R_Register(void)
 	gl_texturemode = ri.Cvar_Get("gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	gl1_texturealphamode = ri.Cvar_Get("gl1_texturealphamode", "default", CVAR_ARCHIVE);
 	gl1_texturesolidmode = ri.Cvar_Get("gl1_texturesolidmode", "default", CVAR_ARCHIVE);
-	gl_anisotropic = ri.Cvar_Get("gl_anisotropic", "0", CVAR_ARCHIVE);
+	gl_anisotropic = ri.Cvar_Get("gl_anisotropic", "4", CVAR_ARCHIVE); /* 4x by default */
 	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", 0);
 
 	gl1_palettedtexture = ri.Cvar_Get("gl1_palettedtexture", "0", CVAR_ARCHIVE);

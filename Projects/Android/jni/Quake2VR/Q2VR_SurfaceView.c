@@ -81,6 +81,7 @@ cvar_t *vr_comfort_mask;
 cvar_t *vr_turn_deadzone;
 cvar_t *vr_framerate;
 cvar_t *vr_use_wheels;
+cvar_t *vr_jump_sound;
 char **refresh_names;
 float *refresh_values;
 
@@ -825,6 +826,11 @@ static bool q2xr_InitOpenXR(q2xrAppThread *thread)
         extensions[extensionCount++] = XR_PICO_CONTROLLER_INTERACTION_EXTENSION_NAME;
         ALOGV("Q2XR enabling %s", XR_PICO_CONTROLLER_INTERACTION_EXTENSION_NAME);
     }
+    /* Optional: lets us lock the display to 72Hz where the runtime supports it. */
+    if (q2xr_ExtensionSupported(available, availableCount, XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME)) {
+        extensions[extensionCount++] = XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME;
+        ALOGV("Q2XR enabling %s", XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME);
+    }
 
     free(available);
 
@@ -894,7 +900,7 @@ static bool q2xr_InitOpenXR(q2xrAppThread *thread)
 
     gApp.Width = (int)(gApp.ViewConfig[0].recommendedImageRectWidth * SS_MULTIPLIER);
     gApp.Height = (int)(gApp.ViewConfig[0].recommendedImageRectHeight * SS_MULTIPLIER);
-    gApp.RefreshRate = 90;
+    gApp.RefreshRate = 72; /* fixed 72Hz - higher rates can stutter on this engine */
     ALOGV("Q2XR view size recommended=%ux%u using=%dx%d",
           gApp.ViewConfig[0].recommendedImageRectWidth,
           gApp.ViewConfig[0].recommendedImageRectHeight,
@@ -915,6 +921,19 @@ static bool q2xr_InitOpenXR(q2xrAppThread *thread)
         return false;
     }
     ALOGV("Q2XR xrCreateSession succeeded");
+
+    /* Lock the display to 72Hz. The engine's frame timing assumes this (gApp.RefreshRate),
+     * and higher refresh rates can stutter on this engine, so it is not user-selectable.
+     * Best-effort: the proc only resolves if XR_FB_display_refresh_rate was enabled above;
+     * otherwise we inherit the runtime default (72Hz on Quest). */
+    {
+        PFN_xrRequestDisplayRefreshRateFB pfnRequestDisplayRefreshRate = NULL;
+        if (XR_SUCCEEDED(xrGetInstanceProcAddr(gApp.Instance, "xrRequestDisplayRefreshRateFB",
+                (PFN_xrVoidFunction *)&pfnRequestDisplayRefreshRate)) && pfnRequestDisplayRefreshRate) {
+            XrResult rr = pfnRequestDisplayRefreshRate(gApp.Session, 72.0f);
+            ALOGV("Q2XR request 72Hz display refresh: %d", rr);
+        }
+    }
 
     XrReferenceSpaceCreateInfo spaceInfo = {XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
     spaceInfo.poseInReferenceSpace = q2xr_IdentityPose();
@@ -1322,7 +1341,7 @@ void VR_Init()
 
     vr_snapturn_angle = Cvar_Get("vr_snapturn_angle", "45", CVAR_ARCHIVE);
     vr_smoothturn = Cvar_Get("vr_smoothturn", "0", CVAR_ARCHIVE);
-    vr_walkdirection = Cvar_Get("vr_walkdirection", "0", CVAR_ARCHIVE);
+    vr_walkdirection = Cvar_Get("vr_walkdirection", "1", CVAR_ARCHIVE); /* 1 = gaze/HMD direction (default), 0 = off-hand controller */
     vr_weapon_pitchadjust = Cvar_Get("vr_weapon_pitchadjust", "-20.0", CVAR_ARCHIVE);
     vr_control_scheme = Cvar_Get("vr_control_scheme", "0", CVAR_ARCHIVE);
     vr_height_adjust = Cvar_Get("vr_height_adjust", "0.0", CVAR_ARCHIVE);
@@ -1331,9 +1350,10 @@ void VR_Init()
     vr_comfort_mask = Cvar_Get("vr_comfort_mask", "0.0", CVAR_ARCHIVE);
     vr_turn_deadzone = Cvar_Get("vr_turn_deadzone", "0.2", CVAR_ARCHIVE);
     vr_framerate = Cvar_Get("vr_framerate", "0", CVAR_ARCHIVE);
-    vr_use_wheels = Cvar_Get("vr_use_wheels", "0", CVAR_ARCHIVE);
+    vr_use_wheels = Cvar_Get("vr_use_wheels", "1", CVAR_ARCHIVE);
+    vr_jump_sound = Cvar_Get("vr_jump_sound", "1", CVAR_ARCHIVE);
     vr_worldscale = Cvar_Get("vr_worldscale", "26.2467", CVAR_ARCHIVE);
-	vr_lasersight = Cvar_Get("vr_lasersight", "0", CVAR_ARCHIVE);
+	vr_lasersight = Cvar_Get("vr_lasersight", "2", CVAR_ARCHIVE); /* 2 = simple laser dot */
     Cvar_Get("vr_hud_depth", "0.5", CVAR_ARCHIVE);
     Cvar_Get("vr_hud_ipd", "0.064", CVAR_ARCHIVE);
     Cvar_Get("vr_screen_depth", "3.5", CVAR_ARCHIVE);

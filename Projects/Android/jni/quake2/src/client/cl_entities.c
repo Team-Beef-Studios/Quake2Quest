@@ -733,8 +733,14 @@ void SetWeapon6DOF(int weapmodel, vec3_t origin, vec3_t gunorigin, vec3_t gunang
 	matrix4x4 matAngleAdjust;
 	Matrix4x4_CreateFromEntity(matAngleAdjust, angleAdjust, vec3_origin, 1.0);
 
+	/* Recoil the gun's orientation by the weapon kick (the same kick the bullets and
+	 * laser sight use), so the muzzle visibly climbs while firing. Only the orientation
+	 * is kicked - the grip/origin stays put in the hand - and the view is never kicked. */
+	vec3_t recoiledWeaponAngles;
+	VectorAdd(weaponangles, cl.frame.playerstate.kick_angles, recoiledWeaponAngles);
+
 	matrix4x4 matWeaponAngles;
-	Matrix4x4_CreateFromEntity(matWeaponAngles, weaponangles, vec3_origin, 1.0);
+	Matrix4x4_CreateFromEntity(matWeaponAngles, recoiledWeaponAngles, vec3_origin, 1.0);
 
 	matrix4x4 matGunAngles;
 	Matrix4x4_Concat(matGunAngles, matWeaponAngles, matAngleAdjust);
@@ -920,11 +926,10 @@ CL_CalcViewValues(void)
 		}
 	}
 
-	for (i = 0; i < 3; i++)
-	{
-		cl.refdef.viewangles[i] += LerpAngle(ops->kick_angles[i],
-				ps->kick_angles[i], lerp);
-	}
+	/* Do NOT apply weapon kick_angles to the view in VR - the headset must never be
+	 * rotated by recoil (nauseating, and it makes the gun appear not to recoil since it
+	 * moves with the view). kick_angles is still delivered in the player_state so the
+	 * laser sight can track the recoiled fire direction; see CL_UpdateLaserSightOrigins. */
 
 	AngleVectors(cl.refdef.viewangles, cl.v_forward, cl.v_right, cl.v_up);
 

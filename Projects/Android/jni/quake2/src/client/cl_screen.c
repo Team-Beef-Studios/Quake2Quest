@@ -656,7 +656,7 @@ SCR_DrawVignette
 */
 extern bool player_moving;
 
-void SCR_DrawVignette (void)
+void SCR_DrawVignette (float separation)
 {
 	if (vr_comfort_mask->value <= 0.0f ||
 		vr_comfort_mask->value > 1.0f)
@@ -678,10 +678,32 @@ void SCR_DrawVignette (void)
 	if (currentVLevel > 0.0f &&
 		currentVLevel < 1.0f)
 	{
-		int x = (int)((viddef.width / 2) * currentVLevel);
-		int y = (int)((viddef.height / 2) * currentVLevel);
+		/* The comfort mask must fill the whole eye and close in towards the eye's
+		 * OPTICAL centre, which - with an asymmetric VR FOV - is not the centre of
+		 * the framebuffer. Derive it from this eye's projection (the same fov tan
+		 * values the renderer uses); fall back to the framebuffer centre if unknown.
+		 * Note this is NOT a HUD element, so it deliberately ignores the HUD stereo
+		 * offset and is sized to the full eye, not the HUD plane. */
+		int eye = separation < 0 ? 0 : 1;
+		float left  = Cvar_VariableValue(eye == 0 ? "gl1_openxr_fov_left_0"  : "gl1_openxr_fov_left_1");
+		float right = Cvar_VariableValue(eye == 0 ? "gl1_openxr_fov_right_0" : "gl1_openxr_fov_right_1");
+		float up    = Cvar_VariableValue(eye == 0 ? "gl1_openxr_fov_up_0"    : "gl1_openxr_fov_up_1");
+		float down  = Cvar_VariableValue(eye == 0 ? "gl1_openxr_fov_down_0"  : "gl1_openxr_fov_down_1");
+		float denomX = right - left;
+		float denomY = up - down;
 
-		re.DrawStretchPic(x, y, viddef.width - (2 * x), viddef.height - (2 * y), "/vignette.tga");
+		/* optical centre in framebuffer pixels (tan == 0 is the view axis) */
+		float cx = (fabsf(denomX) > 0.0001f) ? (viddef.width  * (-left / denomX)) : (viddef.width  * 0.5f);
+		float cy = (fabsf(denomY) > 0.0001f) ? (viddef.height * (up / denomY))    : (viddef.height * 0.5f);
+
+		/* shrink the full-eye mask towards (cx,cy); size matches the old behaviour,
+		 * only the centre moves (identical when the FOV is symmetric) */
+		int x = (int)(cx * currentVLevel);
+		int y = (int)(cy * currentVLevel);
+		int w = (int)(viddef.width  * (1.0f - currentVLevel));
+		int h = (int)(viddef.height * (1.0f - currentVLevel));
+
+		re.DrawStretchPic(x, y, w, h, "/vignette.tga");
 	}
 }
 
@@ -1976,7 +1998,7 @@ void SCR_UpdateForEye (int eye)
 
 			V_RenderView(separation);
 
-            SCR_DrawVignette();
+            SCR_DrawVignette(separation);
 
 			SCR_DrawStats(separation);
 

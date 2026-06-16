@@ -12,5 +12,6 @@ extern cvar_t	*vr_comfort_mask;
 extern cvar_t	*vr_framerate;
 extern cvar_t   *vr_use_wheels;
 extern cvar_t   *vr_smoothturn;
+extern cvar_t   *vr_jump_sound;
 extern char     **refresh_names;
 extern float    *refresh_values;

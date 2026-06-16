@@ -555,7 +555,12 @@ void CL_UpdateLaserSightOrigins ()
         gunorigin[2] -= (QUAKE_MARINE_HEIGHT * vr_worldscale->value);
         gunorigin[2] += ((hmdPosition[1] + vr_height_adjust->value) * vr_worldscale->value);
 		//gunorigin[2] += 1; // just add a little bit
-		AngleVectors(weaponangles, forward, right, NULL);
+		// Aim the laser along the recoiled weapon direction so the dot/line tracks the
+		// muzzle climb: bullets are fired along v_angle + kick_angles, and in VR v_angle
+		// is weaponangles, so add the kick the server reports in the player state.
+		vec3_t aimangles;
+		VectorAdd(weaponangles, cl.frame.playerstate.kick_angles, aimangles);
+		AngleVectors(aimangles, forward, right, NULL);
 
 		qboolean useTrajectoryIndicator = cl_lasersight.ent.frame == 6 || cl_lasersight.ent.frame == 7;
 

@@ -50,9 +50,7 @@ static menuframework_s s_opengl_menu;
 //static menulist_s s_mode_list;
 static menulist_s s_uiscale_list;
 static menuslider_s s_brightness_slider;
-static menuslider_s s_comfort_slider;
 static menulist_s s_fs_box;
-static menulist_s s_refresh_rate;
 static menulist_s s_vsync_list;
 static menulist_s s_af_list;
 static menulist_s s_msaa_list;
@@ -124,12 +122,6 @@ BrightnessCallback(void *s)
 
 	float gamma = slider->curvalue / 10.0;
 	Cvar_SetValue("vid_gamma", gamma);
-}
-
-static void
-ComfortCallback(void *s) {
-	menuslider_s *slider = (menuslider_s *)s;
-	Cvar_SetValue("vr_comfort_mask", slider->curvalue / 10.0f);
 }
 
 static void
@@ -241,8 +233,6 @@ ApplyChanges(void *unused)
 			restart = true;
 		}
 	}
-
-    Cvar_SetValue("vr_framerate", (float)s_refresh_rate.curvalue);
 
 	if (restart)
 	{
@@ -379,7 +369,7 @@ VID_MenuInit(void)
 
 	if (!gl_anisotropic)
 	{
-		gl_anisotropic = Cvar_Get("gl_anisotropic", "0", CVAR_ARCHIVE);
+		gl_anisotropic = Cvar_Get("gl_anisotropic", "4", CVAR_ARCHIVE);
 	}
 
 	if (!gl_msaa_samples)
@@ -441,15 +431,6 @@ VID_MenuInit(void)
 	s_brightness_slider.curvalue = vid_gamma->value * 10;
 #endif
 
-	s_comfort_slider.generic.type = MTYPE_SLIDER;
-	s_comfort_slider.generic.x = 0;
-	s_comfort_slider.generic.y = (y += 10);
-	s_comfort_slider.generic.name = "Comfort Mask";
-	s_comfort_slider.generic.callback = ComfortCallback;
-	s_comfort_slider.minvalue = 0;
-	s_comfort_slider.maxvalue = 9;
-	s_comfort_slider.curvalue = vr_comfort_mask->value * 10.0f;
-
 	s_uiscale_list.generic.type = MTYPE_SPINCONTROL;
 	s_uiscale_list.generic.name = "ui scale";
 	s_uiscale_list.generic.x = 0;
@@ -482,13 +463,6 @@ VID_MenuInit(void)
 	s_fs_box.generic.y = (y += 10);
 	s_fs_box.itemnames = fullscreen_names;
 	s_fs_box.curvalue = (int)vid_fullscreen->value;
-
-    s_refresh_rate.generic.type = MTYPE_SPINCONTROL;
-    s_refresh_rate.generic.name = "refresh rate";
-    s_refresh_rate.generic.x = 0;
-    s_refresh_rate.generic.y = (y += 10);
-    s_refresh_rate.itemnames = (const char **) refresh_names;
-    s_refresh_rate.curvalue = (int)vr_framerate->value;
 
 	s_vsync_list.generic.type = MTYPE_SPINCONTROL;
 	s_vsync_list.generic.name = "vertical sync";
@@ -545,10 +519,8 @@ VID_MenuInit(void)
 //	Menu_AddItem(&s_opengl_menu, (void *)&s_renderer_list);
 //	Menu_AddItem(&s_opengl_menu, (void *)&s_mode_list);
 	Menu_AddItem(&s_opengl_menu, (void *)&s_brightness_slider);
-	Menu_AddItem(&s_opengl_menu, (void *)&s_comfort_slider);
 	Menu_AddItem(&s_opengl_menu, (void *)&s_uiscale_list);
 	Menu_AddItem(&s_opengl_menu, (void *)&s_fs_box);
-    Menu_AddItem(&s_opengl_menu, (void *)&s_refresh_rate);
 	Menu_AddItem(&s_opengl_menu, (void *)&s_vsync_list);
 	Menu_AddItem(&s_opengl_menu, (void *)&s_af_list);
 	Menu_AddItem(&s_opengl_menu, (void *)&s_msaa_list);

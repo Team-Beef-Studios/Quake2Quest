@@ -13,6 +13,7 @@ Authors		:	Simon Brown
 #include "../quake2/src/client/header/client.h"
 
 extern cvar_t	*cl_forwardspeed;
+extern cvar_t	*cl_run;
 cvar_t	*sv_cheats;
 extern cvar_t	*vr_weapon_stabilised;
 extern cvar_t	*vr_use_wheels;
@@ -340,8 +341,14 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             //This section corrects for the fact that the controller actually controls direction of movement, but we want to move relative to the direction the
             //player is facing for positional tracking
             float positionalFactor = (hmdType == XR_DEVICE_TYPE_META)  ? 2500 : 2000;
+            // Cancel out the x1.5 run boost that CL_BaseMove applies so room-scale (6DoF)
+            // movement always covers the walking distance. Run is active when the speed key
+            // (off-hand trigger) is held XOR'd with the always-run cvar - mirror that exactly,
+            // otherwise toggling always-run makes head movement carry the player too far.
+            qboolean speedHeld = (pOffTrackedRemoteNew->Buttons & ovrButton_Trigger) != 0;
+            qboolean running = (speedHeld ? 1 : 0) ^ ((cl_run && cl_run->value != 0) ? 1 : 0);
             float multiplier = positionalFactor / (cl_forwardspeed->value *
-					((pOffTrackedRemoteNew->Buttons & ovrButton_Trigger) ? 1.5f : 1.0f));
+					(running ? 1.5f : 1.0f));
 
             vec2_t v;
             rotateAboutOrigin(-positionDeltaThisFrame[0] * multiplier,

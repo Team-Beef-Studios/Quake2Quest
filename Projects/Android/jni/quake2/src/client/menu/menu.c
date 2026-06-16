@@ -1086,6 +1086,7 @@ static menuslider_s s_options_vr_height_adjust_box;
 static menulist_s s_options_alwaysrun_box;
 static menulist_s s_options_handedness_box;
 static menulist_s s_options_vr_walkdirection_box;
+static menulist_s s_options_vr_jumpsound_box;
 static menulist_s s_options_crosshair_box;
 static menuslider_s s_options_sfxvolume_slider;
 static menuslider_s s_options_haptic_slider;
@@ -1122,6 +1123,12 @@ static void
 AlwaysRunFunc(void *unused)
 {
     Cvar_SetValue("cl_run", (float)s_options_alwaysrun_box.curvalue);
+}
+
+static void
+JumpSoundFunc(void *unused)
+{
+    Cvar_SetValue("vr_jump_sound", (float)s_options_vr_jumpsound_box.curvalue);
 }
 
 static void
@@ -1206,6 +1213,7 @@ ControlsSetMenuItemValues(void)
     s_options_alwaysrun_box.curvalue = (cl_run->value != 0);
     s_options_handedness_box.curvalue = (vr_control_scheme->value == 0) ? 0 : ((vr_control_scheme->value == 10) ? 1 : 2);
     s_options_vr_walkdirection_box.curvalue = (int)vr_walkdirection->value;
+    s_options_vr_jumpsound_box.curvalue = (vr_jump_sound->value != 0);
     s_options_vr_height_adjust_box.curvalue = vr_height_adjust->value * 10.0f;
     s_options_crosshair_box.curvalue = ClampCvar(0, 3, crosshair->value);
     s_options_haptic_slider.curvalue = Cvar_VariableValue("joy_haptic_magnitude") * 10.0F;
@@ -1572,6 +1580,13 @@ Options_MenuInit(void)
     s_options_enable_cheats.generic.callback = EnableCheats;
     s_options_enable_cheats.itemnames = yesno_cheats;
 
+    s_options_vr_jumpsound_box.generic.type = MTYPE_SPINCONTROL;
+    s_options_vr_jumpsound_box.generic.x = 0;
+    s_options_vr_jumpsound_box.generic.y = 150;
+    s_options_vr_jumpsound_box.generic.name = "Jump Sound";
+    s_options_vr_jumpsound_box.generic.callback = JumpSoundFunc;
+    s_options_vr_jumpsound_box.itemnames = yesno_names;
+
     s_options_crosshair_box.generic.type = MTYPE_SPINCONTROL;
     s_options_crosshair_box.generic.x = 0;
     s_options_crosshair_box.generic.y = 110;
@@ -1633,6 +1648,7 @@ Options_MenuInit(void)
         Menu_AddItem(&s_options_menu, (void *)&s_options_snapturn_angle_box);
     }
     Menu_AddItem(&s_options_menu, (void *)&s_options_enable_cheats);
+    Menu_AddItem(&s_options_menu, (void *)&s_options_vr_jumpsound_box);
 //    Menu_AddItem(&s_options_menu, (void *)&s_options_customize_options_action);
     Menu_AddItem(&s_options_menu, (void *)&s_options_defaults_action);
     Menu_AddItem(&s_options_menu, (void *)&s_options_console_action);

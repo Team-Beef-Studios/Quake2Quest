@@ -191,7 +191,7 @@ GL3_Strings(void)
 static void
 GL3_Register(void)
 {
-	vr_lasersight = ri.Cvar_Get("vr_lasersight", "0", CVAR_LATCH);
+	vr_lasersight = ri.Cvar_Get("vr_lasersight", "2", CVAR_LATCH);
 	gl_lefthand = ri.Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
 	r_farsee = ri.Cvar_Get("r_farsee", "0", CVAR_LATCH | CVAR_ARCHIVE);
 
